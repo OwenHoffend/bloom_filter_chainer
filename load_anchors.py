@@ -1,25 +1,26 @@
 import os
 
-#Wrapper class to hold anchors.
+#Wrapper class to hold lists of anchors.
+#Queries are lists of anchors
 class AnchorList:
     def __init__(self):
         self.p = []
-        self.name = ""
-        self.score = 0
+        self.scores = []
 
-#Wrapper class to hold lists of anchors.
-class QueryList:
-    def __init__(self):
-        self.l = []
-    
-    def merge(self, ql):
-        self.l += ql
+    def merge(self, al):
+        self.p += al
 
-    #Get all of the anchors from all of the queries
     def anchors(self):
-        for l in self.l:
-            for p in l.p:
-                yield p
+        for p in self.p:
+            yield p
+
+    #For plotting
+    def xy_coords(self):
+        xs, ys = [], []
+        for x, y in self.p:
+            xs.append(x)
+            ys.append(y)
+        return xs, ys
 
 #Parse a directory full of FASTQ query files containing quality scores
 #Decode the ASCII quality scores and compute an average quality for each read (query)
@@ -55,30 +56,31 @@ def read_quality(filedir):
 # readall: Boolean, consider all reads in the file?
 # max_quers: If readall=False, then specify a max number of queries
 # q_scores: Consider quality score data output from read_quality 
-def load_anchors(filepath, readall=True, max_quers=0):
+def load_anchors(filepath, readall=True, max_quers=0, q_scores=None):
     try:
         with open(filepath) as f:
             q_cnt = 0
-            queries = QueryList()
+            reads = AnchorList()
             header_last = False
+            q = []
             while True:
                 line = f.readline()
                 if line.startswith("@") or line == "": #If this line is a header line
                     if q_cnt != 0 and not header_last:
-                        queries.l.append(q) #Add the query that was last built, if it exists
+                        reads.merge(q) #Add the query that was last built, if it exists
                     if line == "" or (not readall and q_cnt == max_quers):
                         break
-                    q = AnchorList()  
-                    q_cnt = q_cnt + 1
-                    q.name = line[1:].strip()
                     if q_scores != None:
-                        q.score = q_scores[q.name]
+                        q_name = line[1:].strip()
+                        reads.scores.append(q_scores[q_name])
+                    q = []  
+                    q_cnt = q_cnt + 1
                     header_last = True
                 else: #Otherwisem it is a data line, so add it to the current query
                     ls = line.split(',')
-                    q.p.append((int(ls[0], 16), int(ls[1], 16)))
+                    q.append((int(ls[0], 16), int(ls[1], 16)))
                     header_last = False
     except IOError as e:
         print(e)
         exit()
-    return queries
+    return reads
