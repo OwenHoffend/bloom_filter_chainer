@@ -1,6 +1,6 @@
 from load_anchors import AnchorList
 
-def find_primary_ds(al_filtered, num_top, alltop=False, shift=0):
+def find_primary_ds(al_filtered, num_top, alltop=False, run_until=10, shift=0, get_size=False):
     ht = {}
     max_keys = [0, ]
     max_cnts = [1,]
@@ -8,25 +8,33 @@ def find_primary_ds(al_filtered, num_top, alltop=False, shift=0):
         d = x - y
         key = str(((d >> shift) << shift))
         if key in ht:
-            entry = ht[key]
-            entry.append(d)
-            cnt = len(entry)
+            ht[key] += 1
+            cnt = ht[key]
             for i, mcnt in enumerate(max_cnts):
                 if cnt > mcnt:
                     max_cnts[i] = cnt
                     max_keys[i] = int(key)
+                    if mcnt >= run_until:
+                        print("HT Size: {}".format(len(ht.keys())))
+                        if get_size:
+                            return len(ht.keys())
+                        else:
+                            return max_keys
                     break
             else:
                 if len(max_cnts) < num_top or (alltop and cnt > 1):
                     max_cnts.append(cnt)
                     max_keys.append(int(key))
         else:
-            ht[key] = [d, ]
+            ht[key] = 1
     print("HT Size: {}".format(len(ht.keys())))
-    return max_keys
+    if get_size:
+        return len(ht.keys())
+    else:
+        return max_keys
 
-def k_bounds(al, al_filtered, k_dist, num_top, alltop=False, shift=0):
-    primary_ds = find_primary_ds(al_filtered, num_top, alltop, shift)
+def k_bounds(al, al_filtered, k_dist, num_top, alltop=False, run_until=10, shift=0):
+    primary_ds = find_primary_ds(al_filtered, num_top, alltop, run_until=run_until, shift=shift)
     priority0 = AnchorList()
     priority1 = AnchorList()
     for x, y in al.anchors():
