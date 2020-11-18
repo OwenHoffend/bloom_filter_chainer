@@ -97,9 +97,18 @@ def plot_mem_usg(q):
 def sandbox():
     import load_anchors as la
     import os
-    queries = la.load_anchors("./minimap2/test/c_eleganc.txt", readall=False, max_quers=1)
-    plot_mem_usg(queries)
+
+    #Normal loading and plotting of queries
+    #queries = la.load_anchors("./minimap2/test/c_eleganc.txt", readall=False, max_quers=1)
+    #plot_mem_usg(queries)
     #plot_kbounds(queries)
+
+    #Loading and plotting of minimap2 chain results:
+    c_eleganc_anchors = la.load_query_at("./minimap2/test/c_eleganc.txt", 5) 
+    c_eleganc_chain   = la.load_query_at("./minimap2/test/c_eleganc_chains.txt", 5, is_chain=True, max_chains=4)
+    plot_query(c_eleganc_anchors)
+    plot_query(c_eleganc_chain, color='r')
+    plt.show()
 
 if __name__ == "__main__":
     sandbox()

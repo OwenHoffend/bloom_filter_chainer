@@ -56,31 +56,50 @@ def read_quality(filedir):
 # readall: Boolean, consider all reads in the file?
 # max_quers: If readall=False, then specify a max number of queries
 # q_scores: Consider quality score data output from read_quality 
-def load_anchors(filepath, readall=True, max_quers=0, q_scores=None):
+def load_anchors(filepath, readall=True, max_quers=0, skip_cnt=0, is_chain=False, max_chains=0, q_scores=None):
     try:
         with open(filepath) as f:
-            q_cnt = 0
             reads = AnchorList()
-            header_last = False
+            skip = skip_cnt != 0
             q = []
+            header_last = False
+            q_name_last = ""
+            q_cnt = 0
+            c_cnt = 0
+            skip_chains = False
             while True:
                 line = f.readline()
                 if line.startswith("@") or line == "": #If this line is a header line
-                    if q_cnt != 0 and not header_last:
+                    q_name = line[1:].strip()
+                    if (q_cnt != 0 or c_cnt != 0) and not header_last:
                         reads.merge(q) #Add the query that was last built, if it exists
-                    if line == "" or (not readall and q_cnt == max_quers):
+                    if line == "" or ((not readall and q_cnt == max_quers) and
+                                     ( not is_chain or c_cnt > max_chains)):
                         break
                     if q_scores != None:
-                        q_name = line[1:].strip()
                         reads.scores.append(q_scores[q_name])
-                    q = []  
-                    q_cnt = q_cnt + 1
+                    if q_cnt == skip_cnt and (not is_chain or c_cnt > max_chains):
+                        skip = False
+                    if is_chain:
+                        if q_name_last == "" or q_name.split('_')[:-1] != q_name_last.split('_')[:-1]:
+                            q_cnt += 1
+                            c_cnt = 0
+                            skip_chains = False
+                        c_cnt += 1
+                        skip_chains = c_cnt > max_chains
+                    else:
+                        q_cnt += 1
+                    q = []
                     header_last = True
-                else: #Otherwisem it is a data line, so add it to the current query
+                    q_name_last = q_name
+                elif not skip and not skip_chains: #Otherwisem it is a data line, so add it to the current query
+                    header_last = False
                     ls = line.split(',')
                     q.append((int(ls[0], 16), int(ls[1], 16)))
-                    header_last = False
     except IOError as e:
         print(e)
         exit()
     return reads
+
+def load_query_at(filepath, q_idx, is_chain=False, max_chains=0):
+    return load_anchors(filepath, readall=False, max_quers=q_idx, skip_cnt=q_idx-1, is_chain=is_chain, max_chains=max_chains)
