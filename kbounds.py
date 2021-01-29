@@ -14,12 +14,12 @@ def find_primary_ds(al_filtered, num_top, alltop=False, run_until=10, shift=0, g
                 if cnt > mcnt:
                     max_cnts[i] = cnt
                     max_keys[i] = int(key)
-                    if mcnt >= run_until:
-                        print("HT Size: {}".format(len(ht.keys())))
-                        if get_size:
-                            return len(ht.keys())
-                        else:
-                            return max_keys
+                    #if mcnt >= run_until:
+                    #    print("HT Size: {}".format(len(ht.keys())))
+                    #    if get_size:
+                    #        return len(ht.keys())
+                    #    else:
+                    #        return max_keys
                     break
             else:
                 if len(max_cnts) < num_top or (alltop and cnt > 1):

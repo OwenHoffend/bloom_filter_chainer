@@ -104,11 +104,28 @@ def sandbox():
     #plot_kbounds(queries)
 
     #Loading and plotting of minimap2 chain results:
-    c_eleganc_anchors = la.load_query_at("./minimap2/test/c_eleganc.txt", 5) 
-    c_eleganc_chain   = la.load_query_at("./minimap2/test/c_eleganc_chains.txt", 5, is_chain=True, max_chains=4)
-    plot_query(c_eleganc_anchors)
-    plot_query(c_eleganc_chain, color='r')
+    c_eleganc_anchors = la.load_query_at("./minimap2/test/c_eleganc.txt", 5)
+
+    filtered = f_bloom_ord2(c_eleganc_anchors, 1000, 5000, 0.1, 0.1, 0) 
+    bounded = k_bounds(c_eleganc_anchors, filtered[0], 150, 4)
+
+    x, y = bounded[0].xy_coords()
+    plt.scatter(x, y, s=10)
+    plt.xlabel("Reference Position")
+    plt.ylabel("Query Position")
+    plt.title("Reference position vs Query Position")
+    #plt.show()
+
+    c_eleganc_chain = la.load_query_at("./minimap2/test/c_eleganc_chains.txt", 5, is_chain=True, max_chains=4)
+    plot_query(c_eleganc_chain, color='lightgreen')
     plt.show()
+
+    for i in range(100):
+        c_eleganc_anchors = la.load_query_at("./minimap2/test/c_eleganc.txt", i)
+
+        filtered = f_bloom_ord2(c_eleganc_anchors, 1000, 5000, 0.1, 0.1, 0) 
+        bounded = k_bounds(c_eleganc_anchors, filtered[0], 150, 4)
+        c_eleganc_chain = la.load_query_at("./minimap2/test/c_eleganc_chains.txt", i, is_chain=True, max_chains=4)
 
 if __name__ == "__main__":
     sandbox()

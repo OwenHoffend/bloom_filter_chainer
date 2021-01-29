@@ -56,6 +56,8 @@ def read_quality(filedir):
 # readall: Boolean, consider all reads in the file?
 # max_quers: If readall=False, then specify a max number of queries
 # q_scores: Consider quality score data output from read_quality 
+# is_chain: The output files can contain data respresenting the top N chains produced by minimap2. 
+    #The chains are delimited by blah_1, blah_2, etc
 def load_anchors(filepath, readall=True, max_quers=0, skip_cnt=0, is_chain=False, max_chains=0, q_scores=None):
     try:
         with open(filepath) as f:
